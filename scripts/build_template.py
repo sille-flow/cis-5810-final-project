@@ -25,8 +25,9 @@ VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--videos", type=Path, default=None, help="Folder of reference clips")
-    parser.add_argument("--out", type=Path, default=ROOT / "data" / "templates" / "squat_good.npz")
+    parser.add_argument("--videos", type=Path, default=None, help="Folder of reference clips (defaults to squat references)")
+    parser.add_argument("--exercise", default="squat", help="Exercise label used for the default reference folder")
+    parser.add_argument("--out", type=Path, default=None)
     parser.add_argument("--phases", type=int, default=32)
     parser.add_argument("--synthetic", action="store_true")
     parser.add_argument(
@@ -36,6 +37,10 @@ def main() -> None:
         "template, because the features are yaw invariant.",
     )
     args = parser.parse_args()
+    if args.videos is None and not args.synthetic:
+        args.videos = ROOT / "data" / "references" / args.exercise / "good"
+    if args.out is None:
+        args.out = ROOT / "data" / "templates" / f"{args.exercise}_good.npz"
 
     by_view: dict[str, list] = defaultdict(list)
     if args.synthetic or args.videos is None:
@@ -55,9 +60,20 @@ def main() -> None:
             raise SystemExit(f"No video files in {args.videos}")
         for clip in clips:
             print(f"Extracting {clip.name} ...")
-            sequence, view = extract_feature_sequence(clip)
+            try:
+                sequence, view = extract_feature_sequence(clip)
+            except RuntimeError as exc:
+                print(f"  skipping clip: {exc}")
+                continue
             print(f"  detected view: {view} ({len(sequence)} frames)")
             by_view[view].append(sequence)
+
+        if not any(by_view.values()):
+            raise SystemExit(
+                "No usable pose features were found in any clip. Make sure the full body is visible, "
+                "well lit, and large enough in frame; for floor exercises, include the shoulders, hips, "
+                "knees, and ankles where possible."
+            )
 
     if not args.per_view:
         pooled = [seq for seqs in by_view.values() for seq in seqs]

@@ -47,13 +47,16 @@ def draw_match(frame, match: MatchResult) -> None:
 
     top_z = np.argsort(-np.abs(match.z_scores))[:3]
     lines = [
+        *(([(f"Exercise: {match.exercise}", (0, 255, 0), 1.0)] if match.exercise else [])),
         (f"Reps: {match.reps}", (255, 255, 255), 1.25),
-        (f"View: {match.view}   Depth: {int(round(100 * match.depth))}%", (255, 255, 255), 0.9),
+        ((f"View: {match.view}   Depth: {int(round(100 * match.depth))}%") if match.exercise.lower().rstrip("s") == "squat" else f"View: {match.view}", (255, 255, 255), 0.9),
         (f"Phase: {match.phase:.2f}", (255, 255, 255), 0.9),
         (match.feedback, (0, 255, 255), 1.0),
     ]
     for idx in top_z:
-        lines.append((f"{FEATURE_NAMES[idx]}: z={float(match.z_scores[idx]):+.1f}", (220, 220, 220), 0.8))
+        names = match.feature_names or FEATURE_NAMES
+        if idx < len(names):
+            lines.append((f"{names[idx]}: z={float(match.z_scores[idx]):+.1f}", (220, 220, 220), 0.8))
 
     # Semi-transparent dark panel behind the text.
     panel_w = int(min(w - 20, 560 * scale))

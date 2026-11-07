@@ -155,6 +155,9 @@ def extract_feature_sequence(
                 break
     cap.release()
     if not rows:
-        raise RuntimeError(f"No usable pose features in {video_path}")
+        raise RuntimeError(
+            f"No usable pose features in {video_path}; no frames had at least three visible feature channels. "
+            "Check framing, lighting, and whether the full body is visible."
+        )
     view = max(set(views), key=views.count)
     return np.stack(rows, axis=0), view

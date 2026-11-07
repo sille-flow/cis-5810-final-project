@@ -12,6 +12,7 @@ sys.path.insert(0, str(ROOT))
 from src.overlay import draw_match, draw_skeleton
 from src.pose_stream import features_from_result, make_landmarker, monotonic_timestamp_ms, to_mp_image
 from src.realtime_matcher import RealtimeReferenceMatcher
+from src.exercise_selector import AutoExerciseSelector
 from src.synthetic import synthetic_squat_sequence
 from src.template import MultiViewTemplates, build_multiview_templates
 
@@ -33,12 +34,22 @@ def load_or_bootstrap(path: Path) -> MultiViewTemplates:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--template", type=Path, default=ROOT / "data" / "templates" / "squat_good.npz")
+    parser.add_argument("--templates", type=Path, default=None, help="Directory of exercise templates named <exercise>_good.npz")
     parser.add_argument("--camera", type=int, default=0)
     parser.add_argument("--source", type=Path, default=None, help="Optional video file instead of webcam")
     args = parser.parse_args()
 
-    templates = load_or_bootstrap(args.template)
-    matcher = RealtimeReferenceMatcher(templates)
+    if args.templates:
+        banks = {
+            path.stem.removesuffix("_good"): MultiViewTemplates.load(path)
+            for path in sorted(args.templates.glob("*_good.npz"))
+        }
+        if not banks:
+            raise SystemExit(f"No *_good.npz templates found in {args.templates}")
+        matcher = AutoExerciseSelector(banks)
+    else:
+        templates = load_or_bootstrap(args.template)
+        matcher = RealtimeReferenceMatcher(templates)
     cap = cv2.VideoCapture(str(args.source) if args.source else args.camera)
     if not cap.isOpened():
         raise SystemExit("Could not open camera/video")

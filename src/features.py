@@ -152,9 +152,12 @@ def landmarks_to_features(
         if hips > 1e-3:
             knee_width = knees / hips
 
-    if any(v is None for v in (left_knee, right_knee, hip_height)):
-        return None
+    # Pushups and floor exercises often hide the ankles or knees from the pose
+    # model. Keep partially observed poses and let the sequence interpolator fill
+    # missing channels; reject frames only when too little usable geometry exists.
     values = [left_knee, right_knee, left_hip, right_hip, torso, hip_height, knee_width]
+    if sum(v is not None for v in values) < 3:
+        return None
     return np.array([v if v is not None else np.nan for v in values], dtype=np.float64)
 
 
@@ -181,7 +184,9 @@ def interpolate_nans(sequence: np.ndarray) -> np.ndarray:
         if good.all():
             continue
         if not good.any():
-            out[:, j] = 0.0
+            # Neutral defaults prevent an entirely occluded channel from
+            # becoming a false zero-angle signal in a reference template.
+            out[:, j] = 180.0 if j < 4 else (1.7 if j == HIP_HEIGHT_INDEX else (1.0 if j == 6 else 0.0))
             continue
         out[:, j] = np.interp(idx, idx[good], col[good])
     return out

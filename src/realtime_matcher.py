@@ -12,8 +12,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .features import FEATURE_NAMES, VIEW_WEIGHTS
+from .features import VIEW_WEIGHTS
 from .template import MultiViewTemplates, PhaseTemplate
+from .rep_counting import RepCounter, SquatDepthRepCounter
 
 
 @dataclass
@@ -28,6 +29,8 @@ class MatchResult:
     aligned: bool
     view: str = "side"
     depth: float = 0.0  # 0 = standing, 1 = as deep as the reference bottom
+    exercise: str = ""
+    feature_names: tuple[str, ...] = ()
 
 
 class RealtimeReferenceMatcher:
@@ -44,6 +47,7 @@ class RealtimeReferenceMatcher:
         bottom_depth: float = 0.55,
         stand_depth: float = 0.25,
         bottom_hold_frames: int = 3,
+        rep_counter: RepCounter | None = None,
     ):
         # Rep counting uses its own hysteresis state machine on "depth", a
         # 0..1 score of how far down the live pose is relative to the template's
@@ -53,9 +57,7 @@ class RealtimeReferenceMatcher:
         #   bottom_hold_frames: frames in a row at the bottom (rejects spikes).
         # Lower bottom_depth if good reps are missed; raise it (or bottom_hold_frames)
         # if shallow bobs or walking get counted.
-        self.bottom_depth = bottom_depth
-        self.stand_depth = stand_depth
-        self.bottom_hold_frames = bottom_hold_frames
+        self.rep_counter = rep_counter or SquatDepthRepCounter(bottom_depth, stand_depth, bottom_hold_frames)
         # direction_weight: cost bonus/penalty for moving the way the template
         # moves at a candidate phase. direction_scale: per-frame progress speed
         # (as a fraction of the template's range) that counts as "clearly moving".
@@ -80,9 +82,7 @@ class RealtimeReferenceMatcher:
         self._prev_progress: float | None = None
         self._velocity = 0.0
         self._progress_cache: dict[str, tuple[np.ndarray, np.ndarray, float]] = {}
-        self._anchor_cache: dict[int, dict[str, float]] = {}
-        self._armed = False
-        self._bottom_run = 0
+        self._visited_bottom = False
         self.depth = 0.0
 
     def _progress_curve(self, view: str, template: PhaseTemplate):
@@ -96,56 +96,8 @@ class RealtimeReferenceMatcher:
             self._progress_cache[view] = cached
         return cached
 
-    def _anchors(self, template: PhaseTemplate) -> dict[str, float]:
-        key = id(template)
-        a = self._anchor_cache.get(key)
-        if a is None:
-            names = list(template.feature_names)
-            hh = template.mean[:, names.index("hip_height")]
-            knee = 0.5 * (
-                template.mean[:, names.index("left_knee")]
-                + template.mean[:, names.index("right_knee")]
-            )
-            a = {
-                "hh_stand": float(hh.max()),
-                "hh_range": max(float(hh.max() - hh.min()), 0.2),
-                "k_stand": float(knee.max()),
-                "k_range": max(float(knee.max() - knee.min()), 30.0),
-                "hh_i": names.index("hip_height"),
-                "lk_i": names.index("left_knee"),
-                "rk_i": names.index("right_knee"),
-            }
-            self._anchor_cache[key] = a
-        return a
-
-    def _depth(self, template: PhaseTemplate, feats: np.ndarray) -> float:
-        a = self._anchors(template)
-        d_hh = (a["hh_stand"] - feats[int(a["hh_i"])]) / a["hh_range"]
-        fl = (a["k_stand"] - feats[int(a["lk_i"])]) / a["k_range"]
-        fr = (a["k_stand"] - feats[int(a["rk_i"])]) / a["k_range"]
-        # min(): both knees must bend, so walking (legs alternate) stays low.
-        return float(0.5 * np.clip(d_hh, -0.5, 1.5) + 0.5 * np.clip(min(fl, fr), -0.5, 1.5))
-
-    def _count_rep(self, depth: float) -> None:
-        if depth <= self.stand_depth:
-            if self._visited_bottom:
-                self.reps += 1
-                self._visited_bottom = False
-            self._armed = True
-            self._bottom_run = 0
-            return
-        if not self._armed:
-            return
-        if depth >= self.bottom_depth:
-            self._bottom_run += 1
-            if self._bottom_run >= self.bottom_hold_frames:
-                self._visited_bottom = True
-        else:
-            self._bottom_run = 0
-
     def reset(self) -> None:
-        self._armed = False
-        self._bottom_run = 0
+        self.rep_counter.reset()
         self.depth = 0.0
         self.phase_index = 0
         self.smoothed = None
@@ -184,12 +136,13 @@ class RealtimeReferenceMatcher:
                 phase_index=self.phase_index,
                 phase=self.phase_index / n,
                 distance=float("inf"),
-                residuals=np.zeros(len(FEATURE_NAMES)),
-                z_scores=np.zeros(len(FEATURE_NAMES)),
+                residuals=np.zeros(len(template.feature_names)),
+                z_scores=np.zeros(len(template.feature_names)),
                 reps=self.reps,
                 feedback="Pose unclear",
                 aligned=False,
                 view=view,
+                feature_names=template.feature_names,
             )
 
         features = np.nan_to_num(np.asarray(features, dtype=np.float64), nan=0.0)
@@ -198,7 +151,12 @@ class RealtimeReferenceMatcher:
         else:
             self.smoothed = (1.0 - self.smooth) * self.smoothed + self.smooth * features
 
-        weights = VIEW_WEIGHTS.get(view, VIEW_WEIGHTS["oblique"])
+        # Known feature names retain their empirically tuned view weights;
+        # additional exercise/backend features get a neutral weight.
+        view_weights = VIEW_WEIGHTS.get(view, VIEW_WEIGHTS["oblique"])
+        canonical = ("left_knee", "right_knee", "left_hip", "right_hip", "torso_incline", "hip_height", "knee_width")
+        weight_by_name = dict(zip(canonical, view_weights))
+        weights = np.array([weight_by_name.get(name, 1.0) for name in template.feature_names])
         if len(weights) != len(self.smoothed):
             weights = np.ones_like(self.smoothed)
 
@@ -231,8 +189,8 @@ class RealtimeReferenceMatcher:
 
         self.phase_index = best_i
         phase = best_i / n
-        self.depth = self._depth(template, self.smoothed)
-        self._count_rep(self.depth)
+        self.reps, self.depth = self.rep_counter.update(template, self.smoothed, phase=phase)
+        self._visited_bottom = getattr(self.rep_counter, "_visited_bottom", False)
 
         mean, std = template.pose_at_index(best_i)
         residuals = self.smoothed - mean
@@ -250,6 +208,7 @@ class RealtimeReferenceMatcher:
             aligned=True,
             view=view,
             depth=self.depth,
+            feature_names=template.feature_names,
         )
 
     def _feedback(self, z_scores: np.ndarray, view: str) -> str:
