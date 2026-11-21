@@ -1,0 +1,5 @@
+# Versions used for the local Python 3.13 macOS extraction smoke checks.
+numpy==2.1.3
+mediapipe==1.2.3
+opencv-contrib-python==5.1.0.95
+matplotlib==3.10.0

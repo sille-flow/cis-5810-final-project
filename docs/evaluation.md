@@ -100,7 +100,13 @@ The current reference counter still does not expose total shallow attempts.
 Timing includes extraction and both algorithms, excludes decode/rendering,
 and includes warmup; it is not webcam end-to-end latency.
 
-## Implemented and remaining
+## Earlier implementation status (superseded)
+
+See [experiments.md](experiments.md) for the implemented four-method runner,
+reference fitting, cache, event metrics, plots, and demo. The notes below describe
+the earlier evaluator only.
+
+### Earlier status
 
 Implemented: original baseline restoration; MM-Fit audit; headless video
 comparison; annotation CSV headers; conservative rejection of partial live

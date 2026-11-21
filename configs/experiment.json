@@ -1,0 +1,13 @@
+{
+  "smooth_tau_s": 0.08,
+  "max_gap_s": 0.25,
+  "start_depth": 0.25,
+  "stand_depth": 0.12,
+  "acceptable_depth": 0.8,
+  "min_duration_s": 0.6,
+  "max_duration_s": 15.0,
+  "bottom_hold_s": 0.08,
+  "min_coverage": 0.8,
+  "direction_epsilon": 0.005,
+  "match_iou": 0.3
+}
