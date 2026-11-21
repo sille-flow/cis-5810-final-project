@@ -131,7 +131,21 @@ class RealtimeReferenceMatcher:
         view = self._stabilize_view(view)
         template = self.template
         n = template.n_phases
+        # Conservative policy: incomplete geometry is not a zero-valued pose.
+        if features is not None:
+            features = np.asarray(features, dtype=np.float64)
+            if features.shape != (len(template.feature_names),):
+                raise ValueError("Feature vector does not match template schema")
+            if not np.isfinite(features).all():
+                features = None
         if features is None:
+            # Do not complete a repetition across an unobserved interval.
+            saved_reps = self.reps
+            self.rep_counter.reset()
+            self.rep_counter.reps = saved_reps
+            self.smoothed = None
+            self._prev_progress = None
+            self._velocity = 0.0
             return MatchResult(
                 phase_index=self.phase_index,
                 phase=self.phase_index / n,

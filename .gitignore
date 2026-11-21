@@ -1,0 +1,6 @@
+/mm-fit
+__pycache__/
+*.pyc
+.DS_Store
+/output/
+/data/recordings/

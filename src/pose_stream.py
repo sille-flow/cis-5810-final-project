@@ -21,7 +21,9 @@ MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
     "pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
 )
-DEFAULT_MODEL = Path(__file__).resolve().parent.parent / "models" / "pose_landmarker_lite.task"
+ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_MODEL = (ROOT / "pose_landmarker_lite.task" if (ROOT / "pose_landmarker_lite.task").exists()
+                 else ROOT / "models" / "pose_landmarker_lite.task")
 
 
 @contextlib.contextmanager
