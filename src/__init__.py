@@ -1,6 +1,6 @@
-from .features import FEATURE_NAMES, landmarks_to_features
-from .realtime_matcher import RealtimeReferenceMatcher
-from .template import MultiViewTemplates, PhaseTemplate, build_phase_template
+from src.pose.features import FEATURE_NAMES, landmarks_to_features
+from src.experimental.realtime_matcher import RealtimeReferenceMatcher
+from src.experimental.template import MultiViewTemplates, PhaseTemplate, build_phase_template
 
 __all__ = [
     "FEATURE_NAMES",

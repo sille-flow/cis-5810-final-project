@@ -97,16 +97,16 @@ smoke checks. An existing local `.venv` is available on the development machine.
 .venv/bin/python -m unittest discover -s tests -v
 
 # Extract/cache one video and inspect pose quality
-.venv/bin/python scripts/cache_poses.py '/absolute/path/squat.mp4'
+.venv/bin/python scripts/data/cache_poses.py '/absolute/path/squat.mp4'
 
 # Once clip and repetition annotations are populated
-.venv/bin/python scripts/run_experiment.py \
+.venv/bin/python scripts/evaluation/run_experiment.py \
   --manifest data/annotations/clips.csv \
   --repetitions data/annotations/repetitions.csv \
   --split dev --out output/dev --allow-participant-overlap
 
 # Demo after reference.json has been fitted
-.venv/bin/python scripts/demo_squat.py --reference output/dev/reference.json
+.venv/bin/python scripts/demo/demo_squat.py --reference output/dev/reference.json
 ```
 
 `--allow-participant-overlap` explicitly labels a within-person pilot; omit it
@@ -114,22 +114,94 @@ for participant-disjoint evaluation. It does not bypass source-group checks.
 Tune on development data only and keep the test set untouched until settings
 are fixed. Raw recordings, caches, and generated outputs are ignored by Git.
 
-## Remaining work and ownership
+## Code organization
 
-**Kevin and Ellis:** recover/record footage, define the observable depth criterion,
-label each completed attempt, review uncertain cases, and assign reference/dev/test
-splits. Each person can start with two reference clips, four normal/shallow
-evaluation clips across side/oblique views, and two standing/walking negatives.
-Keep the whole body visible and start/end with 2–3 seconds standing still.
+`src/` holds reusable code; `scripts/` wires that code to command-line arguments,
+files, reports and cameras. Run commands from the repository root.
 
-**Implementation/evaluation work:** run the four methods when labels are ready,
-inspect errors, tune on development data, freeze settings, evaluate held-out
-clips, and prepare report figures and demo evidence. Low bilateral visibility
-is a known limitation to measure rather than conceal with filled-in angles.
+```text
+src/
+  pose/           features.py, stream.py, cache.py
+  squat/          baseline.py, tracking.py
+  evaluation/     data.py, metrics.py
+  visualization/  overlay.py
+  experimental/   template.py, realtime_matcher.py, rep_counting.py,
+                  exercise_selector.py, synthetic.py
+scripts/
+  data/           cache_poses.py, audit_mmfit.py
+  evaluation/     run_experiment.py
+  demo/           demo_squat.py
+  experimental/   build_template.py, evaluate_videos.py, run_live.py
+```
 
-**Joint deliverable:** a baseline-versus-three-stages comparison table, supported
-by real labels, failure examples, and a repeatable demo. No claim of general
-form correctness or validated coaching follows from depth classification alone.
+| Area | Responsibility |
+| --- | --- |
+| `src/pose/` | Shared MediaPipe extraction, geometry, visibility, timestamps and pose caches. |
+| `src/squat/` | The evaluated baseline and three iterations, reference fitting and attempt events. |
+| `src/evaluation/` | Annotation validation, split checks, event matching and metrics. |
+| `src/visualization/` | Skeleton and feedback drawing, including the older matcher overlay. |
+| `src/experimental/` | Earlier PCA phase matcher, multi-exercise selector and synthetic fixtures; outside the four-method study. |
+| `scripts/data/` | Extract/cache footage or audit MM-Fit. |
+| `scripts/evaluation/` | Compare all four methods on the same labeled footage. |
+| `scripts/demo/` | Display the evaluated temporal tracker using fitted `reference.json`. |
+| `scripts/experimental/` | Build/run/evaluate the older matcher using `.npz` phase templates. |
+
+Keep algorithms in `src/`, parameters in `configs/`, human annotations in
+`data/annotations/`, tests in `tests/`, and generated evidence in `output/`.
+The notebook demonstrates the experimental matcher. Old flat module/script
+paths have moved; use these new paths. Existing top-level `src` exports remain.
+
+## What to record and do next
+
+Both annotation CSVs currently contain headers only. Real-video accuracy
+comparisons depend on collecting and labeling footage.
+
+For **each of Kevin and Ellis**, record this pilot:
+
+| Purpose | Clips per person | Content |
+| --- | ---: | --- |
+| Reference | 3 | One normal-depth clip at each of side/front/45-degree views; 5 reps each. |
+| Evaluation | 9 | At each view: separate clips of 5 normal, 5 shallow and 5 mixed-tempo attempts. |
+| Negative controls | 2 | 15 seconds standing; 15 seconds walking/turning. |
+| Optional robustness | 1 extra | Brief occlusion or exit/re-entry. |
+
+That is **14 required clips per person, 28 total**: 30 reference repetitions,
+90 evaluation attempts and four negative clips. This replaces the earlier
+abbreviated eight-clip starting suggestion. It is a small within-person pilot.
+
+1. Agree on a visible depth rule before labeling, such as hip crease reaching
+   knee-top height in side view. Mark borderline or unobservable depth `unclear`.
+2. Use a fixed landscape camera, ideally 1080p/30fps at hip height, with the
+   whole body and floor visible. Start/end with 2–3 seconds standing. Use
+   comfortable unweighted movement. Save raw footage under `data/recordings/`.
+   For frontal depth labels, use a simultaneous side camera if available;
+   both views of the same action must share a source group and split.
+3. Fill [clips.csv](data/annotations/clips.csv) with paths, participant, view,
+   reference/dev/test split, source group and counts. Fill
+   [repetitions.csv](data/annotations/repetitions.csv) with start/bottom/end
+   seconds, depth, visibility and labeler for every completed attempt,
+   including reference reps. See the [labeling guide](docs/evaluation.md).
+   Both teammates should independently review a subset before seeing predictions.
+4. Assign splits before evaluation. Include views, movement types and negatives
+   across dev/test; keep related footage in one split. Both participants can
+   contribute references for the pilot with `--allow-participant-overlap`.
+   Reserve a participant entirely from reference/dev for unseen-person testing.
+5. Cache clips and inspect coverage first. Run the four methods on dev, inspect
+   failures, and tune only on dev. Freeze config and reference footage, then
+   run held-out test using `--split test --out output/test`.
+6. Save the comparison table/plots, count errors, rep and shallow F1, coverage,
+   negative false counts and timing. Preserve config, labels and code revision.
+   Reported extraction/algorithm times exclude decode/rendering; measure the
+   full camera-to-feedback path separately before claiming end-to-end latency.
+7. Prepare demo examples of normal/shallow attempts and tracking loss. Report
+   measured baseline-versus-three-iteration results, including regressions and
+   limitations. Depth classification alone does not validate general form.
+
+Suggested ownership follows the proposal: **Ellis** leads capture, extraction
+and coverage review; **Kevin** leads tracking, feedback and experiment settings;
+**both** label/review footage, analyze errors and prepare the report/demo.
+MM-Fit conversion and additional exercises can wait until the squat comparison
+is complete. Commands and expected outputs are in [experiments.md](docs/experiments.md).
 
 ## Key files
 
@@ -137,7 +209,7 @@ form correctness or validated coaching follows from depth classification alone.
 - [Recording and labeling guide](docs/evaluation.md): footage and annotation rules.
 - [Clip manifest](data/annotations/clips.csv) and [repetition labels](data/annotations/repetitions.csv).
 - [Experiment parameters](configs/experiment.json).
-- `src/squat_experiment.py`: reference fitting and four methods.
-- `src/pose_cache.py`: extraction/cache; `src/experiment_metrics.py`: evaluation.
-- `scripts/run_experiment.py`: full experiment; `scripts/demo_squat.py`: demo.
-- `scripts/audit_mmfit.py`: local dataset inventory and coverage audit.
+- `src/squat/tracking.py`: reference fitting and four methods.
+- `src/pose/cache.py`: extraction/cache; `src/evaluation/metrics.py`: evaluation.
+- `scripts/evaluation/run_experiment.py`: full experiment; `scripts/demo/demo_squat.py`: demo.
+- `scripts/data/audit_mmfit.py`: local dataset inventory and coverage audit.

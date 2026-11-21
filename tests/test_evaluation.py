@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
-from src.baseline import SquatTracker
-from src.realtime_matcher import RealtimeReferenceMatcher
-from src.synthetic import synthetic_squat_sequence
-from src.template import build_phase_template
+from src.squat.baseline import SquatTracker
+from src.experimental.realtime_matcher import RealtimeReferenceMatcher
+from src.experimental.synthetic import synthetic_squat_sequence
+from src.experimental.template import build_phase_template
 
 
 class EvaluationTests(unittest.TestCase):

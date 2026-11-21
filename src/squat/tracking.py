@@ -4,7 +4,7 @@ Iterations are prospective experiments, not claims of improvement.
 """
 from dataclasses import dataclass, asdict
 import numpy as np
-from .baseline import SquatTracker
+from src.squat.baseline import SquatTracker
 
 VARIANTS = ('baseline', 'confidence_2d', 'reference_3d', 'temporal_3d')
 

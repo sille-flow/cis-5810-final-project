@@ -1,8 +1,8 @@
 import unittest
 
-from src.realtime_matcher import RealtimeReferenceMatcher
-from src.synthetic import synthetic_squat_sequence
-from src.template import MultiViewTemplates, build_multiview_templates, build_phase_template
+from src.experimental.realtime_matcher import RealtimeReferenceMatcher
+from src.experimental.synthetic import synthetic_squat_sequence
+from src.experimental.template import MultiViewTemplates, build_multiview_templates, build_phase_template
 
 
 class RealtimeMatcherTests(unittest.TestCase):

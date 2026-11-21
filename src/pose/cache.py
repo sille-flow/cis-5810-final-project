@@ -3,8 +3,8 @@ import json
 from pathlib import Path
 import time
 import numpy as np
-from .experiment_data import sha256
-from .features import FEATURE_NAMES, angle_abc
+from src.evaluation.data import sha256
+from src.pose.features import FEATURE_NAMES, angle_abc
 
 SCHEMA = 1
 
@@ -13,7 +13,7 @@ def cache_signature(video, model, versions):
     return dict(schema=SCHEMA, video_sha256=sha256(video), model_sha256=sha256(model),
                 feature_sha256=sha256(Path(__file__).with_name('features.py')),
                 extractor_sha256=sha256(__file__),
-                pose_stream_sha256=sha256(Path(__file__).with_name('pose_stream.py')),
+                pose_stream_sha256=sha256(Path(__file__).with_name('stream.py')),
                 versions=versions)
 
 
@@ -38,7 +38,7 @@ def extract_cached(video, cache_dir, model=None):
     # Lazy imports allow the algorithm/tests to run without MediaPipe.
     import cv2
     import mediapipe as mp
-    from .pose_stream import DEFAULT_MODEL, make_landmarker, features_from_result, to_mp_image
+    from src.pose.stream import DEFAULT_MODEL, make_landmarker, features_from_result, to_mp_image
     model = Path(model) if model else DEFAULT_MODEL
     if not model.is_file():
         raise ValueError(f'Model missing: {model}')

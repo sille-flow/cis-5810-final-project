@@ -4,10 +4,10 @@ import tempfile
 import unittest
 from pathlib import Path
 import numpy as np
-from src.squat_experiment import AttemptTracker, run_method, fit_reference, VARIANTS
-from src.experiment_metrics import event_metrics, match_events, summarize
-from src.experiment_data import load_manifest, load_repetitions
-from src.pose_cache import cache_signature, cache_key
+from src.squat.tracking import AttemptTracker, run_method, fit_reference, VARIANTS
+from src.evaluation.metrics import event_metrics, match_events, summarize
+from src.evaluation.data import load_manifest, load_repetitions
+from src.pose.cache import cache_signature, cache_key
 
 CONFIG=json.loads((Path(__file__).resolve().parents[1]/'configs/experiment.json').read_text())
 
@@ -102,7 +102,7 @@ class ExperimentTests(unittest.TestCase):
     def test_runner_writes_complete_report_from_cached_fixture(self):
         from unittest.mock import patch
         import importlib.util
-        spec=importlib.util.spec_from_file_location('runner',Path(__file__).resolve().parents[1]/'scripts/run_experiment.py')
+        spec=importlib.util.spec_from_file_location('runner',Path(__file__).resolve().parents[1]/'scripts/evaluation/run_experiment.py')
         runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)

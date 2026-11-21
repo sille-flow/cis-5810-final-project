@@ -1,6 +1,6 @@
 """Cache poses, fit reference-only anchors, compare four fixed methods.
 
-python scripts/run_experiment.py --manifest data/annotations/clips.csv \
+python scripts/evaluation/run_experiment.py --manifest data/annotations/clips.csv \
     --repetitions data/annotations/repetitions.csv --split dev --out output/dev
 """
 import argparse
@@ -9,13 +9,13 @@ import json
 from pathlib import Path
 import sys
 import numpy as np
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from src.experiment_data import load_manifest,load_repetitions,sha256
-from src.pose_cache import extract_cached
-from src.squat_experiment import VARIANTS,fit_reference,run_method
-from src.experiment_metrics import event_metrics,summarize
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from src.evaluation.data import load_manifest,load_repetitions,sha256
+from src.pose.cache import extract_cached
+from src.squat.tracking import VARIANTS,fit_reference,run_method
+from src.evaluation.metrics import event_metrics,summarize
 
-ROOT=Path(__file__).resolve().parents[1]
+ROOT=Path(__file__).resolve().parents[2]
 
 
 def write_csv(path,rows):
@@ -114,8 +114,8 @@ def main():
     summary={v:summarize([r for r in rows if r['variant']==v]) for v in VARIANTS}
     groups={field:{value:{v:summarize([r for r in rows if r[field]==value and r['variant']==v]) for v in VARIANTS}
                    for value in sorted({r[field] for r in rows})} for field in ('view','participant')}
-    code_hashes={str(path.relative_to(ROOT)):sha256(path) for path in sorted((ROOT/'src').glob('*.py'))}
-    code_hashes['scripts/run_experiment.py']=sha256(__file__)
+    code_hashes={str(path.relative_to(ROOT)):sha256(path) for path in sorted((ROOT/'src').rglob('*.py'))}
+    code_hashes['scripts/evaluation/run_experiment.py']=sha256(__file__)
     report=dict(split=args.split,config=config,summary=summary,by_group=groups,clips=rows,
                 reference=anchors,cache_paths=cache_paths,participant_overlap=overlap,
                 participant_disjoint=not overlap and not unknown,

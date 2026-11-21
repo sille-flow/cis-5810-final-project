@@ -50,7 +50,7 @@ from reference and development. Do not tune parameters against test results.
 ## Cache and quality inspection
 
 ```sh
-.venv/bin/python scripts/cache_poses.py '/absolute/path/squat.mp4'
+.venv/bin/python scripts/data/cache_poses.py '/absolute/path/squat.mp4'
 ```
 
 output/pose_quality.json records usable 2D/depth fractions and per-feature
@@ -64,7 +64,7 @@ source group consistent. Do not feed split screens into the study unchanged.
 ## Run the experiment
 
 ```sh
-.venv/bin/python scripts/run_experiment.py \
+.venv/bin/python scripts/evaluation/run_experiment.py \
   --manifest data/annotations/clips.csv \
   --repetitions data/annotations/repetitions.csv \
   --split dev --out output/dev --allow-participant-overlap
@@ -98,8 +98,8 @@ regression checks are not real-world accuracy measurements.
 After the experiment produces a reference.json:
 
 ```sh
-.venv/bin/python scripts/demo_squat.py --reference output/dev/reference.json
-.venv/bin/python scripts/demo_squat.py --reference output/dev/reference.json --source '/absolute/path/squat.mp4'
+.venv/bin/python scripts/demo/demo_squat.py --reference output/dev/reference.json
+.venv/bin/python scripts/demo/demo_squat.py --reference output/dev/reference.json --source '/absolute/path/squat.mp4'
 ```
 
 The demo displays completed attempts, depth-accepted repetitions, tracking state

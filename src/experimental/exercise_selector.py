@@ -6,9 +6,9 @@ from dataclasses import replace
 
 import numpy as np
 
-from .rep_counting import PhaseCycleRepCounter, RepCounter, SquatDepthRepCounter
-from .realtime_matcher import MatchResult, RealtimeReferenceMatcher
-from .template import MultiViewTemplates
+from src.experimental.rep_counting import PhaseCycleRepCounter, RepCounter, SquatDepthRepCounter
+from src.experimental.realtime_matcher import MatchResult, RealtimeReferenceMatcher
+from src.experimental.template import MultiViewTemplates
 
 
 class AutoExerciseSelector:

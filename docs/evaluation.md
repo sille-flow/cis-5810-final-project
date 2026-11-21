@@ -2,7 +2,7 @@
 
 ## Local MM-Fit audit
 
-Run `python scripts/audit_mmfit.py --root mm-fit --out output/mmfit`.
+Run `python scripts/data/audit_mmfit.py --root mm-fit --out output/mmfit`.
 The inspected download has 21 sessions, 616 labeled sets, 64 squat sets,
 65 push-up sets, and 65 sit-up sets. It has no RGB video files. Three sets
 have incomplete 3D pose frame coverage (using inclusive label endpoints).
@@ -77,44 +77,21 @@ depth criterion, not a general assessment of safe/correct form. Both teammates
 should independently check a subset and resolve disagreements without looking
 at predictions. Never label every MM-Fit repetition as good form by assumption.
 
-## Video evaluator
+## Evaluation commands
 
-Install requirements in the chosen Python environment, then run:
+Use the four-method workflow in [experiments.md](experiments.md) for the project
+comparison. The recording checklist above is the same 14-clip-per-person pilot
+summarized in the README. Reference clips calibrate anchors; dev clips support
+tuning; test clips supply held-out results after settings are frozen.
 
-```sh
-python scripts/evaluate_videos.py --manifest data/annotations/clips.csv --template data/templates/squat_good.npz --split dev --out output/video_dev
-```
+## Earlier phase-template evaluator
 
-Rebuild the template using ONLY declared reference clips first. The existing
-saved template has insufficient provenance for a controlled experiment.
-The evaluator writes per-frame CSV files and results.json with per-clip counts,
-aggregate MAE/exact-count fractions, pose coverage, and processing timing.
-It uses a fresh landmarker and counters for each clip. It refuses a missing
-template; there is no synthetic fallback. Missing depth targets are excluded
-from depth metrics. The original baseline consumes 2D knee angles, while the
-reference method consumes world-landmark features.
-
-Baseline attempt count and accepted-depth count are different outputs. Compare
-baseline_depth and reference_depth against the same accepted-depth target.
-The current reference counter still does not expose total shallow attempts.
-Timing includes extraction and both algorithms, excludes decode/rendering,
-and includes warmup; it is not webcam end-to-end latency.
-
-## Earlier implementation status (superseded)
-
-See [experiments.md](experiments.md) for the implemented four-method runner,
-reference fitting, cache, event metrics, plots, and demo. The notes below describe
-the earlier evaluator only.
-
-### Earlier status
-
-Implemented: original baseline restoration; MM-Fit audit; headless video
-comparison; annotation CSV headers; conservative rejection of partial live
-geometry; reset of pending repetition on missing pose; bundled model lookup.
-
-Remaining: verified MM-Fit skeleton adapter and participant splits; attempt-level
-reference depth feedback; three controlled iteration configurations; per-rep
-precision/recall and temporal matching; plots; real-video validation. Seven
-unit tests pass, but no real-video accuracy result has yet been produced.
-The current missing-data policy rejects any incomplete feature vector, which
-may reduce coverage; measure that tradeoff before adding channel-level masking.
+`scripts/experimental/evaluate_videos.py` is retained for the older PCA phase
+matcher. It compares the baseline with a `.npz` template, not with the three
+current experiment iterations. Build a template using reference clips only via
+`scripts/experimental/build_template.py` before using it.
+The older live demo (`scripts/experimental/run_live.py`) can bootstrap a synthetic
+template; do not present that output as calibrated study evidence.
+Use `scripts/demo/demo_squat.py` with the experiment's `reference.json` for the
+project demo. MM-Fit conversion and multi-exercise recognition remain outside
+the evaluated squat core.

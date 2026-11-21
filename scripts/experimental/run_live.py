@@ -6,15 +6,15 @@ import argparse
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from src.overlay import draw_match, draw_skeleton
-from src.pose_stream import features_from_result, make_landmarker, monotonic_timestamp_ms, to_mp_image
-from src.realtime_matcher import RealtimeReferenceMatcher
-from src.exercise_selector import AutoExerciseSelector
-from src.synthetic import synthetic_squat_sequence
-from src.template import MultiViewTemplates, build_multiview_templates
+from src.visualization.overlay import draw_match, draw_skeleton
+from src.pose.stream import features_from_result, make_landmarker, monotonic_timestamp_ms, to_mp_image
+from src.experimental.realtime_matcher import RealtimeReferenceMatcher
+from src.experimental.exercise_selector import AutoExerciseSelector
+from src.experimental.synthetic import synthetic_squat_sequence
+from src.experimental.template import MultiViewTemplates, build_multiview_templates
 
 import cv2
 

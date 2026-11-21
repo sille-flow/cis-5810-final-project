@@ -5,8 +5,8 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-from .features import FEATURE_NAMES
-from .realtime_matcher import MatchResult
+from src.pose.features import FEATURE_NAMES
+from src.experimental.realtime_matcher import MatchResult
 
 CONNECTIONS = [
     (0, 1), (1, 2), (2, 3), (3, 7),

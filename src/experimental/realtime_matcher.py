@@ -12,9 +12,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from .features import VIEW_WEIGHTS
-from .template import MultiViewTemplates, PhaseTemplate
-from .rep_counting import RepCounter, SquatDepthRepCounter
+from src.pose.features import VIEW_WEIGHTS
+from src.experimental.template import MultiViewTemplates, PhaseTemplate
+from src.experimental.rep_counting import RepCounter, SquatDepthRepCounter
 
 
 @dataclass

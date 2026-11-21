@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .features import FEATURE_NAMES, feature_min_std, interpolate_nans
+from src.pose.features import FEATURE_NAMES, feature_min_std, interpolate_nans
 
 
 @dataclass

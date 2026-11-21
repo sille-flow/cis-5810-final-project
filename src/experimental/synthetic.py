@@ -1,6 +1,6 @@
 """Synthetic squat feature sequences for testing without a camera.
 
-Generates rows in the same layout as ``src.features.FEATURE_NAMES``. Because
+Generates rows in the same layout as ``src.pose.features.FEATURE_NAMES``. Because
 the real features are yaw invariant, ``view`` only changes the noise level
 (head-on depth estimates are noisier), not the underlying motion.
 

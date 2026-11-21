@@ -5,20 +5,20 @@ from pathlib import Path
 import sys
 import time
 import numpy as np
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
-from src.squat_experiment import AttemptTracker, depth_from_features
+sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
+from src.squat.tracking import AttemptTracker, depth_from_features
 
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--reference',type=Path,required=True)
-    p.add_argument('--config',type=Path,default=Path(__file__).resolve().parents[1]/'configs/experiment.json')
+    p.add_argument('--config',type=Path,default=Path(__file__).resolve().parents[2]/'configs/experiment.json')
     p.add_argument('--source',type=Path)
     p.add_argument('--camera',type=int,default=0)
     args=p.parse_args()
     import cv2
-    from src.pose_stream import make_landmarker,features_from_result,to_mp_image
-    from src.overlay import draw_skeleton
+    from src.pose.stream import make_landmarker,features_from_result,to_mp_image
+    from src.visualization.overlay import draw_skeleton
     tracker=AttemptTracker(json.loads(args.config.read_text()),True)
     reference=json.loads(args.reference.read_text())
     cap=cv2.VideoCapture(str(args.source) if args.source else args.camera)

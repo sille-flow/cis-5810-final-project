@@ -10,7 +10,7 @@ from typing import Protocol
 
 import numpy as np
 
-from .template import PhaseTemplate
+from src.experimental.template import PhaseTemplate
 
 
 class RepCounter(Protocol):

@@ -15,13 +15,13 @@ import numpy as np
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 
-from .features import estimate_camera_view, landmarks_to_features
+from src.pose.features import estimate_camera_view, landmarks_to_features
 
 MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
     "pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
 )
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MODEL = (ROOT / "pose_landmarker_lite.task" if (ROOT / "pose_landmarker_lite.task").exists()
                  else ROOT / "models" / "pose_landmarker_lite.task")
 

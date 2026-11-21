@@ -11,11 +11,11 @@ from pathlib import Path
 import sys
 import time
 import numpy as np
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from src.baseline import SquatTracker
-from src.features import angle_abc
-from src.template import MultiViewTemplates
-from src.realtime_matcher import RealtimeReferenceMatcher
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from src.squat.baseline import SquatTracker
+from src.pose.features import angle_abc
+from src.experimental.template import MultiViewTemplates
+from src.experimental.realtime_matcher import RealtimeReferenceMatcher
 
 
 def baseline_angle(landmarks):
@@ -37,7 +37,7 @@ def main():
     p.add_argument('--split', choices=['dev','test'], default='dev')
     p.add_argument('--out', type=Path, required=True)
     args = p.parse_args()
-    from src.pose_stream import make_landmarker, features_from_result, to_mp_image
+    from src.pose.stream import make_landmarker, features_from_result, to_mp_image
     import cv2
     bank = MultiViewTemplates.load(args.template)
     with args.manifest.open() as f:

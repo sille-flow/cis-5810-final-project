@@ -4,7 +4,7 @@ Mix side-view and facing-camera clips in the same folder. The builder tags
 each clip automatically and writes one multi-view template.
 
 Example:
-    python scripts/build_template.py --videos data/references/squat/good --out data/templates/squat_good.npz
+    python scripts/experimental/build_template.py --videos data/references/squat/good --out data/templates/squat_good.npz
 """
 
 from __future__ import annotations
@@ -14,11 +14,11 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from src.synthetic import synthetic_squat_sequence
-from src.template import build_multiview_templates
+from src.experimental.synthetic import synthetic_squat_sequence
+from src.experimental.template import build_multiview_templates
 
 VIDEO_EXTS = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
 
@@ -53,7 +53,7 @@ def main() -> None:
             synthetic_squat_sequence(n_frames=72, n_reps=3, depth=88.0, noise=1.5, view="front"),
         ]
     else:
-        from src.pose_stream import extract_feature_sequence
+        from src.pose.stream import extract_feature_sequence
 
         clips = sorted(p for p in args.videos.iterdir() if p.suffix.lower() in VIDEO_EXTS)
         if not clips:
