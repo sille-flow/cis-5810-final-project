@@ -1,0 +1,19 @@
+{
+  "imported_at": "2026-11-22T22:30:50.462465",
+  "source_files": [
+    "clip_counts.numbers",
+    "reference_reps.numbers"
+  ],
+  "method": "Read the tables in Numbers via accessibility and transcribed their cells exactly; originals unchanged.",
+  "depth_rule": "Hip crease reaching knee-top height.",
+  "participant_note": "The source uses video in every participant cell; this is a placeholder, not a verified person identifier.",
+  "dataset": {
+    "title": "Gym Members Exercise Dataset",
+    "author": "Seyed Vala Khorasani",
+    "year": 2024,
+    "publisher": "Kaggle",
+    "url": "https://www.kaggle.com/dsv/9559728",
+    "doi": "10.34740/KAGGLE/DSV/9559728"
+  },
+  "review_note": "User confirmed the dataset citation and agreed depth criterion in chat on 2026-11-22. User reports team review completed."
+}

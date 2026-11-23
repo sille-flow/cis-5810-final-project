@@ -1,0 +1,8 @@
+clip_id,split,human_attempts,human_acceptable_depth_reps,notes,path,source_group,participant,view
+archive_squat_11,reference,1,1,,../videos/squat/squat_11.mp4,gym_b,video,oblique
+archive_squat_2,dev,4,4,,../videos/squat/squat_2.MOV,gym_a,video,oblique
+archive_squat_4,dev,4,3,first one bad,../videos/squat/squat_4.MOV,gym_a,video,oblique
+archive_squat_5,dev,4,4,,../videos/squat/squat_5.MOV,gym_a,video,oblique
+archive_squat_17,dev,1,0,,../videos/squat/squat_17.mp4,tutorial_c,video,side
+archive_squat_18,dev,1,1,,../videos/squat/squat_18.mp4,tutorial_c,video,front
+archive_squat_26,dev,3,3,,../videos/squat/squat_26.mp4,tutorial_d,video,side

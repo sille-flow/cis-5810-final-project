@@ -1,0 +1,31 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{bazarevsky2020}
+\citation{mediapipe}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Goals, audience, and scope}{1}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}System and pipeline}{1}{section.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces All five methods use the same saved pose data. The manual counts are used to evaluate predictions.}}{1}{figure.1}\protected@file@percent }
+\citation{khorasani2024}
+\citation{mediapipe}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Data and evaluation}{2}{section.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Clips used in the experiment. Depth coverage is the percentage of frames containing all three features needed by the reference method. It does not measure depth accuracy. Durations come from the decoded timestamps.}}{2}{table.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Baseline and first three iterations}{3}{section.4}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Results on the same six development clips. Lower MAE is better. The reference and temporal methods produce identical predictions. The hybrid method, described on the next page, was developed after reviewing these results. ``Unclear'' counts reps whose depth the method could not judge.}}{3}{table.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Iteration 1: smoothing the 2D signal}{3}{subsection.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Iteration 2: using a reference squat for depth}{3}{subsection.4.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Iteration 3: checking movement over time}{3}{subsection.4.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The updated methods reduce counting error, but all have higher depth-count error than the baseline.}}{3}{figure.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Iteration 4: separating rep counting from depth feedback}{4}{section.5}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Predicted rep counts for each clip. The hybrid counts all three reps in clip 26, but misses clip 18 and undercounts the three angled gym clips.}}{4}{table.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Replaying clip 26 through the demo counts three reps. Two have acceptable depth and one has unclear depth. This checks that the tracker works in the video demo; it does not measure live-camera latency.}}{4}{figure.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {6}Errors and processing speed}{5}{section.6}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Top: the 2D knee angle repeatedly crosses the counting thresholds in clip 5. Bottom: clip 26 is missing features that the reference method needs from both legs. Shaded areas show missing features.}}{5}{figure.4}\protected@file@percent }
+\bibstyle{plain}
+\bibdata{references}
+\bibcite{bazarevsky2020}{1}
+\bibcite{mediapipe}{2}
+\bibcite{khorasani2024}{3}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Next steps, timeline, and responsibilities}{6}{section.7}\protected@file@percent }
+\gdef \@abspage@last{6}

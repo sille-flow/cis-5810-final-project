@@ -1,8 +1,25 @@
-/mm-fit
 __pycache__/
 *.pyc
 .DS_Store
-/output/
-/data/recordings/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
 
 .venv/
+
+# Human annotation inputs and data/README.md are versioned. Large originals,
+# derived caches, review imagery, backups, and build products stay local.
+/data/videos/
+/data/datasets/
+/data/models/
+/data/templates/
+/data/cache/
+/data/review/
+/data/results/
+/data/reports/
+/data/backups/
+/data/annotations/legacy/
+/data/annotations/clips.csv
+/data/annotations/repetitions.csv
+/data/annotations/archive_squat_review.csv

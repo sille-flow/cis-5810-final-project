@@ -1,0 +1,19 @@
+\begin{thebibliography}{1}
+
+\bibitem{bazarevsky2020}
+Valentin Bazarevsky, Ivan Grishchenko, Karthik Raveendran, Tyler Zhu, Fan Zhang, and Matthias Grundmann.
+\newblock {BlazePose}: On-device real-time body pose tracking.
+\newblock {\em arXiv preprint arXiv:2006.10204}, 2020.
+\newblock \url{https://arxiv.org/abs/2006.10204}.
+
+\bibitem{mediapipe}
+{Google AI Edge}.
+\newblock {MediaPipe} pose landmarker, 2026.
+\newblock Documentation accessed November 22, 2026. \url{https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker}.
+
+\bibitem{khorasani2024}
+Seyed~Vala Khorasani.
+\newblock {Gym Members Exercise Dataset}, 2024.
+\newblock \url{https://www.kaggle.com/dsv/9559728}. DOI: \url{https://doi.org/10.34740/KAGGLE/DSV/9559728}.
+
+\end{thebibliography}

@@ -102,7 +102,7 @@ class ExperimentTests(unittest.TestCase):
     def test_runner_writes_complete_report_from_cached_fixture(self):
         from unittest.mock import patch
         import importlib.util
-        spec=importlib.util.spec_from_file_location('runner',Path(__file__).resolve().parents[1]/'scripts/evaluation/run_experiment.py')
+        spec=importlib.util.spec_from_file_location('runner',Path(__file__).resolve().parents[1]/'scripts/experimental/run_event_experiment.py')
         runner=importlib.util.module_from_spec(spec);spec.loader.exec_module(runner)
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)

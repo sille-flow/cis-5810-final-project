@@ -41,8 +41,8 @@ def audit(root):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('--root', type=Path, default=Path('mm-fit'))
-    p.add_argument('--out', type=Path, default=Path('output/mmfit'))
+    p.add_argument('--root', type=Path, default=Path('data/datasets/mm-fit'))
+    p.add_argument('--out', type=Path, default=Path('data/review/mmfit'))
     args = p.parse_args()
     records, summary = audit(args.root)
     if not records:

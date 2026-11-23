@@ -1,0 +1,339 @@
+\documentclass[10pt,letterpaper]{article}
+\usepackage[margin=0.75in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern,microtype,booktabs,tabularx,array,graphicx,amsmath,xcolor}
+\usepackage{enumitem}
+\usepackage[font=small,labelfont=bf]{caption}
+\captionsetup{hypcap=false}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+\definecolor{ink}{HTML}{20354C}
+\usepackage{titlesec}
+\titleformat{\section}{\large\bfseries\color{ink}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\normalsize\bfseries\color{ink}}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{11pt}{5pt}
+\titlespacing*{\subsection}{0pt}{8pt}{3pt}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlength{\emergencystretch}{2em}
+\setlist[itemize]{leftmargin=1.25em,itemsep=2pt,topsep=3pt}
+\hypersetup{pdftitle={Real-Time Gym Form Correction: Midpoint Report},pdfauthor={Ellis Charles and Kevin Xue}}
+% Generated assets live beside the packaged source, or under data/reports when
+% compiling this editable source from docs/report or the repository root.
+\newcommand{\reportassets}{}
+\IfFileExists{tables/metrics_macros.tex}{}{%
+  \IfFileExists{../../data/reports/midpoint/tables/metrics_macros.tex}{%
+    \renewcommand{\reportassets}{../../data/reports/midpoint/}%
+  }{%
+    \IfFileExists{data/reports/midpoint/tables/metrics_macros.tex}{%
+      \renewcommand{\reportassets}{data/reports/midpoint/}%
+    }{%
+      \PackageError{midpoint}{Generated report assets are missing}{Run make figures from the repository root, then compile again.}%
+    }%
+  }%
+}
+\graphicspath{{\reportassets figures/}}
+\input{\reportassets tables/metrics_macros.tex}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{ink} Real-Time Gym Form Correction}\par
+\vspace{5pt}
+{\large CIS 5810 Midpoint Report --- Group 53}\par
+\vspace{5pt}
+Ellis Charles: \texttt{chaelli@engineering.upenn.edu}\\
+Kevin Xue: \texttt{kevinxue@engineering.upenn.edu}\\
+\vspace{3pt}
+November 22, 2026
+\end{center}
+
+\section*{Summary}
+We are building a webcam-based exercise assistant that counts squats and gives
+feedback on squat depth. We tested five versions on six development clips
+containing 17 manually counted repetitions. Smoothing the knee-angle signal
+reduced mean absolute counting error (MAE) from \BaseMAE{} to \SmoothMAE{} reps
+per clip. We then tried using a reference squat to judge depth and added checks
+on movement duration and tracking quality. Both versions had a counting MAE of
+\RefMAE{}, but their depth counts were less accurate than the baseline's.
+Our latest version combines 2D knee-angle tracking for counting with
+reference-based 3D features for depth feedback. It achieved a counting MAE of
+\HybridMAE{}, although its depth-count MAE of \HybridDepthMAE{} was still worse
+than the baseline's \BaseDepthMAE{}. It also marked depth as unclear for two of
+its 13 counted reps. We developed this version after reviewing the same six
+clips, so we still need to test it on new videos.
+
+\section{Goals, audience, and scope}
+Our goal is to help people who exercise without a trainer. The planned app
+shows a pose skeleton, a rep count, and depth feedback over a camera feed.
+For the midpoint, we focus on counting completed squats and counting how many
+reach acceptable depth. We define acceptable depth as the hip crease reaching
+the top of the knee. This evaluation does not cover injury risk, overall squat
+technique, or recognition of other exercises.
+
+\section{System and pipeline}
+We use the pretrained MediaPipe Pose Landmarker Lite model to estimate 2D image
+landmarks and 3D world landmarks. We do not retrain the pose model.
+BlazePose describes the approach behind this type of pose tracking for fitness
+applications~\cite{bazarevsky2020,mediapipe}. Our work focuses on processing the
+landmarks, tracking each squat, calibrating depth feedback, and evaluating the
+results.
+\begin{center}
+\includegraphics[width=\linewidth]{pipeline.png}
+\captionof{figure}{All five methods use the same saved pose data.
+The manual counts are used to evaluate predictions.}
+\end{center}
+We save the pose results so every method uses the same inputs. These files
+include frame timestamps, missing observations, landmarks, visibility scores,
+computed features, and processing times. We also save hashes to identify the
+video, model, and extraction code used. The repository separates reusable code,
+scripts, data, and generated results.
+
+\subsection*{Baseline}
+The baseline uses the knee-angle state machine from our original proposal.
+It tracks the more visible leg, starts a rep when the knee angle falls below
+$150^\circ$, and counts the rep when the angle returns above $160^\circ$.
+It marks depth as acceptable if the smallest 2D knee angle during the rep is
+at most $95^\circ$. We use these thresholds as starting values; they have not
+been validated as anatomical standards.
+
+\clearpage
+\section{Data and evaluation}
+We use videos from Khorasani's \emph{Gym Members Exercise Dataset} on
+Kaggle~\cite{khorasani2024}. Our local archive contains 29 squat clips totaling
+about 297 seconds. We reviewed sample frames to check for cropping, split-screen
+layouts, edits, and footage we could use. We chose one reference clip and six
+development clips, keeping the original video files. The six evaluation clips
+contain 17 completed reps, with 15 labeled as reaching acceptable depth.
+The reference clip, clip 11, is used for calibration and is not scored.
+
+\begin{center}
+\input{\reportassets tables/dataset.tex}
+\captionof{table}{Clips used in the experiment. Depth coverage is the percentage
+of frames containing all three features needed by the reference method.
+It does not measure depth accuracy. Durations come from the decoded timestamps.}
+\end{center}
+
+For each evaluation clip, we recorded the total number of completed reps and
+the number that reached acceptable depth. We excluded partial reps at the
+start or end of a video. For example, clip 4 has four completed reps and three
+acceptable-depth reps, with the annotation ``first one bad.'' Both team members
+reviewed the depth rule and a subset of the counts, but we did not measure
+agreement between annotators. Depth is also harder to judge from the front
+than from the side.
+
+In clip 11, we marked the start, bottom, and return of one acceptable squat
+at 0.539, 2.523, and 4.830 seconds. We use only this interval to calculate the
+reference standing and bottom positions. The source groups are
+\texttt{gym\_b} for calibration and \texttt{gym\_a}, \texttt{tutorial\_c}, and
+\texttt{tutorial\_d} for development. The evaluation script checks for duplicate
+video files and prevents a source group from appearing in both splits.
+However, the participant field contains the placeholder \texttt{video}, so we
+cannot confirm that the splits contain different people.
+
+For the $N=6$ evaluation clips, we report mean absolute counting error and the
+fraction of clips whose predicted count matches the manual count exactly:
+\[
+\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}|\widehat n_i-n_i|,
+\qquad
+\mathrm{Exact}=\frac{1}{N}\sum_{i=1}^{N}\mathbf{1}[\widehat n_i=n_i].
+\]
+We calculate depth-count MAE the same way, using the number of acceptable-depth
+reps. Since our labels are totals for each video, we cannot report per-rep
+precision, recall, F1, or depth-classification accuracy. We also have no clips
+with zero squats, so we have not tested whether standing or walking produces
+false counts.
+
+The first four methods use the same saved pose data and fixed settings.
+We developed the hybrid method after reviewing their errors. It keeps the
+0.6-second minimum duration and 0.25-second gap limit, but its design still
+reflects what we learned from these clips. All six scored clips are marked
+\texttt{dev}; we have not evaluated on a separate test set. The 3D coordinates
+are estimates from a single camera, rather than motion-capture
+measurements~\cite{mediapipe}.
+
+\clearpage
+\section{Baseline and first three iterations}
+\begin{center}
+\input{\reportassets tables/results.tex}
+\captionof{table}{Results on the same six development clips. Lower MAE is
+better. The reference and temporal methods produce identical predictions.
+The hybrid method, described on the next page, was developed after reviewing
+these results. ``Unclear'' counts reps whose depth the method could not judge.}
+\end{center}
+
+\subsection{Iteration 1: smoothing the 2D signal}
+The baseline overcounts all three gym clips filmed at an angle. In clip 5,
+for example, it counts 10 reps instead of four. We added exponential smoothing
+with a time constant of 0.08 seconds, using only current and previous frames.
+We also cancel an unfinished rep if tracking is missing for more than
+0.25 seconds. Counting MAE drops from \BaseMAE{} to \SmoothMAE{}, a
+\CountReduction{}\% reduction. In clip 5, the count drops from 10 to five.
+The number of exact matches stays at 1/6, while depth-count MAE increases from
+\BaseDepthMAE{} to \SmoothDepthMAE{}. Smoothing reduces extra counts, but depth
+judgments still depend on the camera angle.
+
+\subsection{Iteration 2: using a reference squat for depth}
+We replaced the 2D knee-angle signal with hip height relative to torso length
+and both 3D knee angles. For each feature $q_j$, we use standing value $s_j$ and
+bottom value $b_j$ from the reference squat to calculate
+$r_j=(s_j-q_j)/(s_j-b_j)$. We combine them into a depth signal:
+$d=0.5r_{\mathrm{hip}}+0.5\min(r_{\mathrm{left}},r_{\mathrm{right}})$.
+A rep starts at $d\geq0.25$ and ends after returning to $d\leq0.12$.
+Its peak must reach at least 0.8 for depth to be accepted. Counting MAE stays at
+\RefMAE{}, and exact matches increase to 2/6. Clip 18 improves from zero to one
+counted rep, but clip 26 drops from three to zero. Depth-count MAE increases to
+\RefDepthMAE{}. These results suggest that one reference squat does not transfer
+well across the people and camera views in our clips.
+
+\subsection{Iteration 3: checking movement over time}
+We added a minimum rep duration of 0.6 seconds, a check that the person rises
+from the bottom, and a requirement to stay at depth for at least 0.08 seconds.
+We also mark depth as unclear when the required features are available for
+less than 80\% of the rep. These checks aim to reject brief false movements and
+avoid giving depth feedback when tracking is incomplete. However, every rep
+counted by the reference method already passes these checks. Counts and depth
+labels therefore stay the same on our six clips. The automated tests check
+that the rules work as intended, but we have not yet shown that they improve
+results on real videos.
+
+\begin{center}
+\includegraphics[width=\linewidth]{method_comparison.png}
+\captionof{figure}{The updated methods reduce counting error, but all have
+higher depth-count error than the baseline.}
+\end{center}
+
+\clearpage
+\section{Iteration 4: separating rep counting from depth feedback}
+The reference method can miss an entire rep when it loses track of one leg.
+To address this, our hybrid method counts reps using the smoothed 2D knee
+angle and uses the reference-based 3D features only to judge depth.
+Before starting a rep, it must first observe the person standing, including
+after a tracking gap. A completed rep must return to standing, last
+0.6--15 seconds, and have usable 2D tracking for at least 80\% of its duration.
+A tracking gap longer than 0.25 seconds cancels the unfinished rep.
+
+The method can count a completed rep even when it cannot judge its depth.
+It marks depth as \emph{unclear} if too many 3D features are missing, if there
+is a gap longer than 0.25 seconds, or if the apparent depth peak is too brief.
+We do not fill in missing features. Only reps explicitly marked as acceptable
+contribute to the accepted-depth count; an unclear label does not mean that
+the squat was shallow.
+
+\begin{center}
+\input{\reportassets tables/counts.tex}
+\captionof{table}{Predicted rep counts for each clip. The hybrid counts all
+three reps in clip 26, but misses clip 18 and undercounts the three angled gym clips.}
+\end{center}
+
+The hybrid counts 3, 3, 3, 1, 0, and 3 reps, compared with manual counts of
+4, 4, 4, 1, 1, and 3. Its counting MAE is \HybridMAE{}, compared with
+\SmoothMAE{} for the smoothing method, and it matches two of the six clips
+exactly. Two of its 13 counted reps have unclear depth, leaving 84.6\% with
+an acceptable or shallow label. Depth-count MAE is \HybridDepthMAE{}, so better
+rep counting has not yet led to better depth judgments.
+In an earlier trial, adding only the duration check gave a counting MAE of
+0.50. The full hybrid scores 0.67 because its standing, gap, and coverage checks
+also reject interrupted movements. The tables report the full implementation.
+
+\begin{center}
+\includegraphics[width=\linewidth]{hybrid_case.png}
+\captionof{figure}{Replaying clip 26 through the demo counts three reps.
+Two have acceptable depth and one has unclear depth. This checks that the
+tracker works in the video demo; it does not measure live-camera latency.}
+\end{center}
+
+\clearpage
+\section{Errors and processing speed}
+\begin{center}
+\includegraphics[width=\linewidth]{failure_traces.png}
+\captionof{figure}{Top: the 2D knee angle repeatedly crosses the counting
+thresholds in clip 5. Bottom: clip 26 is missing features that the reference
+method needs from both legs. Shaded areas show missing features.}
+\end{center}
+
+\textbf{Repeated threshold crossings.} Eight of the baseline's ten counted
+reps in clip 5 last less than 0.6 seconds. Together with the plot, this suggests
+that noisy angle estimates cause extra counts. We would need labels for each
+rep to identify every false count. Switching the tracked leg between frames,
+background distractions, and blocked body parts may also contribute.
+
+\textbf{Missing features.} Clip 26 has usable depth features in only 56.25\%
+of frames. The longest gap between valid observations is 2.04 seconds, well
+above our 0.25-second limit. The reference tracker is not ready to start a rep
+in 88.0\% of frames and counts no reps, while the 2D baseline counts all three.
+Clip 17 has similar problems: 40\% depth coverage and a 1.72-second gap between
+valid observations.
+
+\textbf{Reference calibration.} The largest raw depth values in clips 2 and 4
+are 0.45 and 0.65, below the required 0.8. However, the manual labels mark four
+and three reps as reaching acceptable depth. The reference-based signal
+therefore disagrees with the labels on these clips. We need to review more examples to understand this mismatch.
+
+\textbf{Processing speed.} The saved median pose and feature extraction times
+range from \ExtractMin{} to \ExtractMax{} ms per frame across clips on our local
+macOS arm64 machine. Median counter times from a new run are about
+\CounterMin{}--\CounterMax{} ms per frame, although these very small measurements
+are sensitive to timer resolution. These times exclude video decoding,
+display, and camera buffering. We still need to measure the delay for the
+complete webcam demo.
+
+\clearpage
+\section{Next steps, timeline, and responsibilities}
+We have implemented and compared five squat-counting methods. The next phase
+will focus on depth errors and evaluation on new clips. We have not yet compared
+against MoveNet or tested recognition of other exercises. The demo uses the
+hybrid by default, with the original temporal method still available. Video
+replays count three reps in clip 26 and one in clip 17 without reference
+calibration. Without a reference, depth is marked unclear. We also need to
+record a backup presentation video.
+
+Our next steps focus on the errors we observed and on testing new clips:
+\begin{itemize}
+\item Improve depth estimates when some landmarks are missing, and make person
+and leg selection more stable. The hybrid keeps more rep counts, but still
+returns unclear or incorrect depth labels.
+\item Try calibration with several acceptable squats or camera views, then test
+whether it works on source groups we have not used for development.
+\item Add clips with brief movements, tracking noise, standing, and walking.
+Use them to check whether the timing rules reject false counts without
+removing valid reps.
+\end{itemize}
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.19\linewidth}Xp{0.19\linewidth}@{}}
+\toprule
+Target & Milestone & Lead / support\\
+\midrule
+Nov. 22 & Finish the five-method comparison and revised midpoint report & Both\\
+Nov. 23--25 & Review missing landmarks, improve unclear-depth handling, add partial-rep and no-squat clips & Ellis / Kevin\\
+Nov. 26--29 & Test calibration with multiple reference squats and timing checks on new development clips & Kevin / Ellis\\
+Nov. 30--Dec. 3 & Fix settings, label new source groups, evaluate, and measure webcam latency & Both\\
+Dec. 4--6 & Rehearse the five-minute presentation, record a backup, and attend Demo Day on Dec. 6 & Both\\
+Dec. 7--10 & Analyze the final experiments and finish the report and supporting materials by Dec. 10 & Both\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Following our proposal, Ellis leads pose-estimation integration and video
+processing, while Kevin leads squat-state tracking and feedback. Both members
+help review annotations, connect the system components, interpret results,
+and prepare the presentation. The table shows our planned work for the
+rest of the project.
+
+\subsection*{Reproducing the results and crediting sources}
+The source and results package includes the annotation CSVs, settings,
+reference values, per-frame predictions, file and code hashes, and comparison
+tables. Running \texttt{make report} evaluates all five methods and builds the
+figures, LaTeX report, and supporting ZIP. Running \texttt{make check} runs the
+automated tests. All 57 tests pass, which checks software behavior rather than
+accuracy on additional videos. We credit MediaPipe/BlazePose and the video
+dataset below. Our earlier MM-Fit data review and phase-template prototype
+are not part of the results reported here.
+
+
+\begingroup
+\small
+\bibliographystyle{plain}
+\IfFileExists{references.bib}{\bibliography{references}}{\bibliography{docs/report/references}}
+\endgroup
+\end{document}

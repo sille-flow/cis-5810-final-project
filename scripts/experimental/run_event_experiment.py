@@ -1,7 +1,7 @@
 """Cache poses, fit reference-only anchors, compare four fixed methods.
 
-python scripts/evaluation/run_experiment.py --manifest data/annotations/clips.csv \
-    --repetitions data/annotations/repetitions.csv --split dev --out output/dev
+python scripts/experimental/run_event_experiment.py --manifest data/annotations/clips.csv \
+    --repetitions data/annotations/repetitions.csv --split dev --out data/results/dev
 """
 import argparse
 import csv
@@ -51,7 +51,7 @@ def main():
     p.add_argument('--repetitions',type=Path,required=True)
     p.add_argument('--config',type=Path,default=ROOT/'configs/experiment.json')
     p.add_argument('--split',choices=['dev','test'],default='dev')
-    p.add_argument('--cache',type=Path,default=ROOT/'output/pose_cache')
+    p.add_argument('--cache',type=Path,default=ROOT/'data/cache/poses')
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--model',type=Path)
     p.add_argument('--no-plots',action='store_true')
@@ -115,7 +115,7 @@ def main():
     groups={field:{value:{v:summarize([r for r in rows if r[field]==value and r['variant']==v]) for v in VARIANTS}
                    for value in sorted({r[field] for r in rows})} for field in ('view','participant')}
     code_hashes={str(path.relative_to(ROOT)):sha256(path) for path in sorted((ROOT/'src').rglob('*.py'))}
-    code_hashes['scripts/evaluation/run_experiment.py']=sha256(__file__)
+    code_hashes['scripts/experimental/run_event_experiment.py']=sha256(__file__)
     report=dict(split=args.split,config=config,summary=summary,by_group=groups,clips=rows,
                 reference=anchors,cache_paths=cache_paths,participant_overlap=overlap,
                 participant_disjoint=not overlap and not unknown,

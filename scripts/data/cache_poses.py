@@ -11,9 +11,9 @@ from src.pose.cache import extract_cached
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('videos',nargs='+',type=Path)
-    p.add_argument('--cache',type=Path,default=Path('output/pose_cache'))
+    p.add_argument('--cache',type=Path,default=Path('data/cache/poses'))
     p.add_argument('--model',type=Path)
-    p.add_argument('--report',type=Path,default=Path('output/pose_quality.json'))
+    p.add_argument('--report',type=Path,default=Path('data/review/pose_quality.json'))
     args=p.parse_args();rows=[]
     for video in args.videos:
         cache,path=extract_cached(video,args.cache,args.model)

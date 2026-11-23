@@ -22,8 +22,7 @@ MODEL_URL = (
     "pose_landmarker_lite/float16/latest/pose_landmarker_lite.task"
 )
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_MODEL = (ROOT / "pose_landmarker_lite.task" if (ROOT / "pose_landmarker_lite.task").exists()
-                 else ROOT / "models" / "pose_landmarker_lite.task")
+DEFAULT_MODEL = ROOT / "data" / "models" / "pose_landmarker_lite.task"
 
 
 @contextlib.contextmanager
